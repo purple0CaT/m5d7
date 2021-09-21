@@ -14,17 +14,8 @@ import {
 import { productValidation } from "./validation.js";
 import { getReviews } from "../services/fs-tools.js";
 import fs from "fs-extra";
-// import { uploadFile } from "./fs-tools.js";
 
 const productsRouter = express.Router();
-// productsRouter.get("/", async (req, res, next) => {
-//   try {
-//     const products = await getProducts();
-//     res.send(products);
-//   } catch (error) {
-//     next(error);
-//   }
-// });
 // get by category
 productsRouter.get("/", async (req, res, next) => {
   try {
@@ -128,7 +119,7 @@ productsRouter.put(
       console.log(index);
       const productToModify = products[index];
 
-      const link = `http://localhost:3003/${fileName}`;
+      const link = `${process.env.FE_PROD_URL}${fileName}`;
       req.file = link;
       const newPhoto = { imageUrl: req.file };
       const updatedProduct = {
