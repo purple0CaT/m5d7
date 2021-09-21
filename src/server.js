@@ -5,7 +5,7 @@ import listEndpoints from "express-list-endpoints";
 import reviewsAmazn from "./services/reviews/review.js";
 import productsRouter from "./servicies/products.js";
 import { genericErrHandl, customErrHand } from "./errorHandlers.js";
-// === Server ===
+// === Serve CORS ===
 const whiteList = [process.env.FE_DEV_URL, process.env.FE_PROD_URL];
 const corsOptions = {
   origin: function (origin, next) {
