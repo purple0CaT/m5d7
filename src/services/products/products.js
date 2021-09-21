@@ -10,10 +10,19 @@ import {
   writeProducts,
   publicPathFolder,
   savePhoto,
-} from "./fs-tools.js";
-import { productValidation } from "./validation.js";
-import { getReviews } from "../services/fs-tools.js";
+} from "../fs-tools.js";
+import { prodIcCheck, productValidation } from "./validation.js";
+import { getReviews } from "../fs-tools.js";
 import fs from "fs-extra";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+
+const cloudinaryStorage = new CloudinaryStorage({
+  cloudinary, //authomatic read cloud URL
+  params: {
+    folder: "amazonTest-Img",
+  },
+});
 
 const productsRouter = express.Router();
 // get by category
@@ -101,38 +110,31 @@ productsRouter.put("/:id", async (req, res, next) => {
 });
 
 productsRouter.put(
-  "/:id/uploadimage",
-  multer().single("image"),
-  // uploadFile,
+  "/:id/uploadPhoto",
+  prodIcCheck,
+  multer({
+    storage: cloudinaryStorage,
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype != "image/jpeg" && file.mimetype != "image/png")
+        cb(createHttpError(400, "Format not suported!"), false);
+      else cb(null, true);
+    },
+  }).single("image"),
   async (req, res, next) => {
     try {
-      const { originalname, buffer } = req.file;
-      const extension = extname(originalname);
-      const fileName = `${req.params.id}${extension}`;
-      console.log(`originalname: ${originalname}`);
-      console.log(`fileName: ${fileName}`);
-
-      await fs.writeFile(join(publicPathFolder, fileName), buffer);
-
+      let urlPhoto = req.file.path;
+      // products
       const products = await getProducts();
-      const index = products.findIndex((p) => p.id === req.params.id);
-      console.log(index);
-      const productToModify = products[index];
-
-      const link = `${process.env.FE_PROD_URL}${fileName}`;
-      req.file = link;
-      const newPhoto = { imageUrl: req.file };
+      const index = products.findIndex((p) => p.id == req.params.id);
       const updatedProduct = {
-        ...productToModify,
-        ...newPhoto,
-        updatedAt: new Date(),
+        ...products[index],
+        imageUrl: urlPhoto,
       };
-
       products[index] = updatedProduct;
       await writeProducts(products);
       res.send(updatedProduct);
     } catch (error) {
-      console.log(error);
+      next(error);
     }
   }
 );
@@ -153,19 +155,16 @@ productsRouter.delete("/:id", async (req, res, next) => {
 productsRouter.post(
   "/:id/uploadPhoto",
   multer({
+    storage: cloudinaryStorage,
     fileFilter: (req, file, cb) => {
       if (file.mimetype != "image/jpeg" && file.mimetype != "image/png")
         cb(createHttpError(400, "Format not suported!"), false);
       else cb(null, true);
     },
-  }).single("photoKey"),
+  }).single("image"),
   async (req, res, next) => {
     try {
-      let nameOfPhoto = `${req.params.id}.${
-        req.file.originalname.split(".").reverse()[0]
-      }`;
-      let urlPhoto = `http://localhost:3003/${nameOfPhoto}`;
-      await savePhoto(nameOfPhoto, req.file.buffer);
+      let urlPhoto = req.file.path;
       // products
       const products = await getProducts();
       const index = products.findIndex((p) => p.id == req.params.id);
@@ -175,7 +174,7 @@ productsRouter.post(
       };
       products[index] = updatedProduct;
       await writeProducts(products);
-      res.send(updatedProduct);
+      res.send(urlPhoto);
     } catch (error) {
       next(error);
     }

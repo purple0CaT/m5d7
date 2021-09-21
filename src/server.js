@@ -3,7 +3,7 @@ import cors from "cors";
 import { join } from "path";
 import listEndpoints from "express-list-endpoints";
 import reviewsAmazn from "./services/reviews/review.js";
-import productsRouter from "./servicies/products.js";
+import productsRouter from "./services/products/products.js";
 import { genericErrHandl, customErrHand } from "./errorHandlers.js";
 // === Serve CORS ===
 const whiteList = [process.env.FE_DEV_URL, process.env.FE_PROD_URL];
