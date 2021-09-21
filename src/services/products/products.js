@@ -46,8 +46,6 @@ productsRouter.get("/:id", async (req, res, next) => {
   try {
     const products = await getProducts();
     const product = products.find((p) => p.id == req.params.id);
-    console.log("product:", product);
-    console.log("products:", products);
     if (product) {
       res.send(product);
     } else {
