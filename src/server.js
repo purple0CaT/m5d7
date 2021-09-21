@@ -6,18 +6,24 @@ import reviewsAmazn from "./services/reviews/review.js";
 import productsRouter from "./servicies/products.js";
 import { genericErrHandl, customErrHand } from "./errorHandlers.js";
 // === Server ===
-const loggerMiddleware = (req, res, next) => {
-  console.log(`Request method ${req.method} -- Request URL ${req.url}`);
-  next();
+const whiteList = [process.env.FE_DEV_URL, process.env.FE_PROD_URL];
+const corsOptions = {
+  origin: function (origin, next) {
+    if (!origin || whiteList.indexOf(origin) != -1) {
+      next(null, true);
+    } else {
+      next(new Error("Origin not allowed!"));
+    }
+  },
 };
+// =
 const server = express();
-const port = 3003;
+const port = process.env.PORT;
 const publicFolderPath = join(process.cwd(), "public");
 // === COnfiguration | Before endpoints! ===
-server.use(loggerMiddleware);
 server.use(express.static(publicFolderPath));
 // body converter
-server.use(cors());
+server.use(cors(corsOptions));
 server.use(express.json());
 
 // ==== ROUTES / ENDPOINTS ====
